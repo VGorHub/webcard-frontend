@@ -1,0 +1,1851 @@
+openapi: 3.0.3
+info:
+  title: Персональный сайт API
+  description: API для персонального сайта-портфолио
+  version: 1.0.0
+  contact:
+    name: Владимир Горохов
+    email: vova-gorohov04@mail.ru
+
+servers:
+  - url: http://localhost:8000/api
+    description: Локальный сервер разработки
+  - url: https://api.example.com/api
+    description: Продакшн сервер
+
+tags:
+  - name: Auth
+    description: Аутентификация и авторизация
+  - name: Personal Info
+    description: Управление персональной информацией
+  - name: Experiences
+    description: Управление опытом работы
+  - name: Skills
+    description: Управление навыками
+  - name: Education
+    description: Управление образованием
+  - name: Achievements
+    description: Управление достижениями
+  - name: Projects
+    description: Управление проектами
+  - name: Messages
+    description: Управление сообщениями
+  - name: Files
+    description: Управление файлами
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Вход в систему
+      description: Аутентификация пользователя и получение токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  example: password
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Выход из системы
+      description: Завершение сессии пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Информация о текущем пользователе
+      description: Получение информации о текущем аутентифицированном пользователе
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /personal-info:
+    get:
+      tags:
+        - Personal Info
+      summary: Получение персональной информации
+      description: Получение персональной информации для отображения на сайте
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalInfo'
+    put:
+      tags:
+        - Personal Info
+      summary: Обновление персональной информации
+      description: Обновление персональной информации
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalInfo'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalInfo'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /personal-info/profile-image:
+    post:
+      tags:
+        - Personal Info
+      summary: Загрузка изображения профиля
+      description: Загрузка нового изображения профиля
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: /uploads/profile/profile-123456.jpg
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /experiences:
+    get:
+      tags:
+        - Experiences
+      summary: Получение списка опыта работы
+      description: Получение списка всего опыта работы
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Experience'
+    post:
+      tags:
+        - Experiences
+      summary: Создание записи об опыте работы
+      description: Добавление новой записи об опыте работы
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperienceInput'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experience'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /experiences/{id}:
+    get:
+      tags:
+        - Experiences
+      summary: Получение записи об опыте работы
+      description: Получение конкретной записи об опыте работы по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experience'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Experiences
+      summary: Обновление записи об опыте работы
+      description: Обновление существующей записи об опыте работы
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperienceInput'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experience'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Experiences
+      summary: Удаление записи об опыте работы
+      description: Удаление существующей записи об опыте работы
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /skills:
+    get:
+      tags:
+        - Skills
+      summary: Получение списка категорий навыков
+      description: Получение списка всех категорий навыков
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkillCategory'
+    post:
+      tags:
+        - Skills
+      summary: Создание категории навыков
+      description: Добавление новой категории навыков
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillCategoryInput'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillCategory'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /skills/{id}:
+    get:
+      tags:
+        - Skills
+      summary: Получение категории навыков
+      description: Получение конкретной категории навыков по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillCategory'
+        '404':
+          description: Категория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Skills
+      summary: Обновление категории навыков
+      description: Обновление существующей категории навыков
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillCategoryInput'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillCategory'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Категория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Skills
+      summary: Удаление категории навыков
+      description: Удаление существующей категории навыков
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Категория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /educations:
+    get:
+      tags:
+        - Education
+      summary: Получение списка образования
+      description: Получение списка всего образования
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Education'
+    post:
+      tags:
+        - Education
+      summary: Создание записи об образовании
+      description: Добавление новой записи об образовании
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationInput'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Education'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /educations/{id}:
+    get:
+      tags:
+        - Education
+      summary: Получение записи об образовании
+      description: Получение конкретной записи об образовании по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Education'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Education
+      summary: Обновление записи об образовании
+      description: Обновление существующей записи об образовании
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationInput'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Education'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Education
+      summary: Удаление записи об образовании
+      description: Удаление существующей записи об образовании
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /educations/{id}/diploma:
+    post:
+      tags:
+        - Education
+      summary: Загрузка диплома
+      description: Загрузка диплома для записи об образовании
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                diploma:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: /uploads/diplomas/diploma-123456.pdf
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Запись не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /achievements:
+    get:
+      tags:
+        - Achievements
+      summary: Получение списка достижений
+      description: Получение списка всех достижений
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Achievement'
+    post:
+      tags:
+        - Achievements
+      summary: Создание достижения
+      description: Добавление нового достижения
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AchievementInput'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Achievement'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /achievements/{id}:
+    get:
+      tags:
+        - Achievements
+      summary: Получение достижения
+      description: Получение конкретного достижения по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Achievement'
+        '404':
+          description: Достижение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Achievements
+      summary: Обновление достижения
+      description: Обновление существующего достижения
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AchievementInput'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Achievement'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Достижение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Achievements
+      summary: Удаление достижения
+      description: Удаление существующего достижения
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Достижение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /achievements/{id}/certificate:
+    post:
+      tags:
+        - Achievements
+      summary: Загрузка сертификата
+      description: Загрузка сертификата для достижения
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                certificate:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: /uploads/certificates/certificate-123456.pdf
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Достижение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /achievements/{id}/photos:
+    post:
+      tags:
+        - Achievements
+      summary: Загрузка фотографий
+      description: Загрузка фотографий для достижения
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  urls:
+                    type: array
+                    items:
+                      type: string
+                    example: ["/uploads/photos/photo-123456.jpg", "/uploads/photos/photo-123457.jpg"]
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Достижение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects:
+    get:
+      tags:
+        - Projects
+      summary: Получение списка проектов
+      description: Получение списка всех проектов
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+    post:
+      tags:
+        - Projects
+      summary: Создание проекта
+      description: Добавление нового проекта
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '201':
+          description: Успешное создание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects/{id}:
+    get:
+      tags:
+        - Projects
+      summary: Получение проекта
+      description: Получение конкретного проекта по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Проект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Projects
+      summary: Обновление проекта
+      description: Обновление существующего проекта
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Проект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Projects
+      summary: Удаление проекта
+      description: Удаление существующего проекта
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Проект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects/{id}/image:
+    post:
+      tags:
+        - Projects
+      summary: Загрузка изображения проекта
+      description: Загрузка основного изображения для проекта
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: /uploads/projects/project-123456.jpg
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Проект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects/{id}/screenshots:
+    post:
+      tags:
+        - Projects
+      summary: Загрузка скриншотов проекта
+      description: Загрузка скриншотов для проекта
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                screenshots:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  urls:
+                    type: array
+                    items:
+                      type: string
+                    example: ["/uploads/screenshots/screenshot-123456.jpg", "/uploads/screenshots/screenshot-123457.jpg"]
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Проект не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /messages:
+    get:
+      tags:
+        - Messages
+      summary: Получение списка сообщений
+      description: Получение списка всех сообщений
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Messages
+      summary: Отправка сообщения
+      description: Отправка нового сообщения через форму обратной связи
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageInput'
+      responses:
+        '201':
+          description: Успешная отправка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  /messages/{id}:
+    get:
+      tags:
+        - Messages
+      summary: Получение сообщения
+      description: Получение конкретного сообщения по ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Сообщение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Messages
+      summary: Удаление сообщения
+      description: Удаление существующего сообщения
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Сообщение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /messages/{id}/read:
+    patch:
+      tags:
+        - Messages
+      summary: Отметка сообщения как прочитанного
+      description: Отметка сообщения как прочитанного
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Успешное обновление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Сообщение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /files/upload:
+    post:
+      tags:
+        - Files
+      summary: Загрузка файла
+      description: Загрузка одного файла
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                category:
+                  type: string
+                  example: general
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResult'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /files/upload-multiple:
+    post:
+      tags:
+        - Files
+      summary: Загрузка нескольких файлов
+      description: Загрузка нескольких файлов
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                category:
+                  type: string
+                  example: general
+      responses:
+        '200':
+          description: Успешная загрузка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipleFileUploadResult'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /files/{id}:
+    delete:
+      tags:
+        - Files
+      summary: Удаление файла
+      description: Удаление существующего файла
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Успешное удаление
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Файл не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Произошла ошибка
+        error:
+          type: string
+          example: Unauthorized
+        statusCode:
+          type: integer
+          example: 401
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        username:
+          type: string
+          example: admin
+        role:
+          type: string
+          example: admin
+
+    PersonalInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        name:
+          type: string
+          example: Владимир Горохов
+        title:
+          type: string
+          example: Backend разработчик
+        bio:
+          type: string
+          example: Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java Spring Boot.
+        phone:
+          type: string
+          example: +7 (909) 540 41 41
+        email:
+          type: string
+          example: vova-gorohov04@mail.ru
+        location:
+          type: string
+          example: Томск, Россия
+        profileImage:
+          type: string
+          example: /uploads/profile/profile-123456.jpg
+
+    Experience:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        period:
+          type: string
+          example: Июль 2024 - Сентябрь 2024
+        company:
+          type: string
+          example: ООО "Газпром Трансгаз Томск"
+        position:
+          type: string
+          example: Backend разработчик
+        responsibilities:
+          type: array
+          items:
+            type: string
+          example: ["Разработка серверной части корпоративных приложений на Python/Django", "Создание и интеграция RESTful API"]
+        technologies:
+          type: array
+          items:
+            type: string
+          example: ["Python", "Django", "PostgreSQL"]
+        description:
+          type: string
+          example: Работа над корпоративными приложениями
+
+    ExperienceInput:
+      type: object
+      required:
+        - period
+        - company
+        - position
+        - responsibilities
+      properties:
+        period:
+          type: string
+          example: Июль 2024 - Сентябрь 2024
+        company:
+          type: string
+          example: ООО "Газпром Трансгаз Томск"
+        position:
+          type: string
+          example: Backend разработчик
+        responsibilities:
+          type: array
+          items:
+            type: string
+          example: ["Разработка серверной части корпоративных приложений на Python/Django", "Создание и интеграция RESTful API"]
+        technologies:
+          type: array
+          items:
+            type: string
+          example: ["Python", "Django", "PostgreSQL"]
+        description:
+          type: string
+          example: Работа над корпоративными приложениями
+
+    SkillCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        title:
+          type: string
+          example: Языки программирования
+        icon:
+          type: string
+          example: Code
+        skills:
+          type: array
+          items:
+            type: string
+          example: ["Python (Django, Django REST Framework)", "Java (Spring Boot)"]
+
+    SkillCategoryInput:
+      type: object
+      required:
+        - title
+        - icon
+        - skills
+      properties:
+        title:
+          type: string
+          example: Языки программирования
+        icon:
+          type: string
+          example: Code
+        skills:
+          type: array
+          items:
+            type: string
+          example: ["Python (Django, Django REST Framework)", "Java (Spring Boot)"]
+
+    Education:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        institution:
+          type: string
+          example: Томский государственный университет систем управления и радиоэлектроники (ТУСУР)
+        degree:
+          type: string
+          example: Бакалавр
+        field:
+          type: string
+          example: Системы автоматизированного проектирования (САПР)
+        period:
+          type: string
+          example: 2022 - 2026
+        gpa:
+          type: string
+          example: 4.5
+        description:
+          type: string
+          example: Факультет Вычислительных систем (ФВС)
+        achievements:
+          type: array
+          items:
+            type: string
+          example: ["Python разработчик дополнительная квалификация от IT Academy", "Опыт написания научных статей"]
+        diploma:
+          type: string
+          example: /uploads/diplomas/diploma-123456.pdf
+        status:
+          type: string
+          enum: [completed, in-progress, planned]
+          example: in-progress
+
+    EducationInput:
+      type: object
+      required:
+        - institution
+        - degree
+        - field
+        - period
+        - status
+      properties:
+        institution:
+          type: string
+          example: Томский государственный университет систем управления и радиоэлектроники (ТУСУР)
+        degree:
+          type: string
+          example: Бакалавр
+        field:
+          type: string
+          example: Системы автоматизированного проектирования (САПР)
+        period:
+          type: string
+          example: 2022 - 2026
+        gpa:
+          type: string
+          example: 4.5
+        description:
+          type: string
+          example: Факультет Вычислительных систем (ФВС)
+        achievements:
+          type: array
+          items:
+            type: string
+          example: ["Python разработчик дополнительная квалификация от IT Academy", "Опыт написания научных статей"]
+        diploma:
+          type: string
+          example: /uploads/diplomas/diploma-123456.pdf
+        status:
+          type: string
+          enum: [completed, in-progress, planned]
+          example: in-progress
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        title:
+          type: string
+          example: 1 место на хакатоне IT Academy
+        description:
+          type: string
+          example: Разработал платформу создания клубов по интересам
+        highlight:
+          type: boolean
+          example: true
+        date:
+          type: string
+          example: 22-24 сентября 2023
+        location:
+          type: string
+          example: Томск, IT Academy
+        fullDescription:
+          type: string
+          example: Победа в престижном хакатоне IT Academy. Разработанная платформа для создания клубов по интересам получила высшую оценку жюри за инновационный подход и качество реализации.
+        photos:
+          type: array
+          items:
+            type: string
+          example: ["/uploads/photos/photo-123456.jpg", "/uploads/photos/photo-123457.jpg"]
+        certificate:
+          type: string
+          example: /uploads/certificates/certificate-123456.pdf
+        participants:
+          type: integer
+          example: 80
+        position:
+          type: string
+          example: 1 место
+        organizer:
+          type: string
+          example: IT Academy
+
+    AchievementInput:
+      type: object
+      required:
+        - title
+        - description
+        - date
+        - location
+        - fullDescription
+        - organizer
+      properties:
+        title:
+          type: string
+          example: 1 место на хакатоне IT Academy
+        description:
+          type: string
+          example: Разработал платформу создания клубов по интересам
+        highlight:
+          type: boolean
+          example: true
+        date:
+          type: string
+          example: 22-24 сентября 2023
+        location:
+          type: string
+          example: Томск, IT Academy
+        fullDescription:
+          type: string
+          example: Победа в престижном хакатоне IT Academy. Разработанная платформа для создания клубов по интересам получила высшую оценку жюри за инновационный подход и качество реализации.
+        photos:
+          type: array
+          items:
+            type: string
+          example: ["/uploads/photos/photo-123456.jpg", "/uploads/photos/photo-123457.jpg"]
+        certificate:
+          type: string
+          example: /uploads/certificates/certificate-123456.pdf
+        participants:
+          type: integer
+          example: 80
+        position:
+          type: string
+          example: 1 место
+        organizer:
+          type: string
+          example: IT Academy
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        title:
+          type: string
+          example: Система управления задачами
+        description:
+          type: string
+          example: Высоконагруженное приложение для распределения задач среди сотрудников с real-time уведомлениями
+        technologies:
+          type: array
+          items:
+            type: string
+          example: ["Python", "Django", "PostgreSQL", "Redis", "WebSocket"]
+        image:
+          type: string
+          example: /uploads/projects/project-123456.jpg
+        liveUrl:
+          type: string
+          example: https://task-manager-demo.com
+        githubUrl:
+          type: string
+          example: https://github.com/example/task-manager
+        category:
+          type: string
+          example: Backend
+        fullDescription:
+          type: string
+          example: Комплексная система управления задачами, разработанная для крупных команд. Включает в себя распределение задач, отслеживание прогресса, систему уведомлений и аналитику производительности.
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Real-time уведомления через WebSocket", "Система ролей и прав доступа", "Аналитика и отчеты"]
+        screenshots:
+          type: array
+          items:
+            type: string
+          example: ["/uploads/screenshots/screenshot-123456.jpg", "/uploads/screenshots/screenshot-123457.jpg"]
+
+    ProjectInput:
+      type: object
+      required:
+        - title
+        - description
+        - technologies
+        - category
+        - fullDescription
+      properties:
+        title:
+          type: string
+          example: Система управления задачами
+        description:
+          type: string
+          example: Высоконагруженное приложение для распределения задач среди сотрудников с real-time уведомлениями
+        technologies:
+          type: array
+          items:
+            type: string
+          example: ["Python", "Django", "PostgreSQL", "Redis", "WebSocket"]
+        image:
+          type: string
+          example: /uploads/projects/project-123456.jpg
+        liveUrl:
+          type: string
+          example: https://task-manager-demo.com
+        githubUrl:
+          type: string
+          example: https://github.com/example/task-manager
+        category:
+          type: string
+          example: Backend
+        fullDescription:
+          type: string
+          example: Комплексная система управления задачами, разработанная для крупных команд. Включает в себя распределение задач, отслеживание прогресса, систему уведомлений и аналитику производительности.
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Real-time уведомления через WebSocket", "Система ролей и прав доступа", "Аналитика и отчеты"]
+        screenshots:
+          type: array
+          items:
+            type: string
+          example: ["/uploads/screenshots/screenshot-123456.jpg", "/uploads/screenshots/screenshot-123457.jpg"]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        name:
+          type: string
+          example: Иван Иванов
+        email:
+          type: string
+          example: ivan@example.com
+        subject:
+          type: string
+          example: Предложение о сотрудничестве
+        message:
+          type: string
+          example: Здравствуйте! Я представляю компанию XYZ и хотел бы обсудить возможность сотрудничества.
+        timestamp:
+          type: string
+          format: date-time
+          example: 2023-09-15T14:30:00Z
+        read:
+          type: boolean
+          example: false
+
+    MessageInput:
+      type: object
+      required:
+        - name
+        - email
+        - subject
+        - message
+      properties:
+        name:
+          type: string
+          example: Иван Иванов
+        email:
+          type: string
+          example: ivan@example.com
+        subject:
+          type: string
+          example: Предложение о сотрудничестве
+        message:
+          type: string
+          example: Здравствуйте! Я представляю компанию XYZ и хотел бы обсудить возможность сотрудничества.
+
+    FileUploadResult:
+      type: object
+      properties:
+        url:
+          type: string
+          example: /uploads/files/file-123456.jpg
+        filename:
+          type: string
+          example: file-123456.jpg
+        id:
+          type: string
+          example: 1
+        contentType:
+          type: string
+          example: image/jpeg
+        size:
+          type: integer
+          example: 1024000
+
+    MultipleFileUploadResult:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUploadResult'
