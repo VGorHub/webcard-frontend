@@ -43,13 +43,13 @@ export function ProjectsManager() {
       title: "Система управления задачами",
       description: "Высоконагруженное приложение для распределения задач среди сотрудников с real-time уведомлениями",
       technologies: ["Python", "Django", "PostgreSQL", "Redis", "WebSocket"],
-      image: "/placeholder.png?height=300&width=400",
+      image: "/placeholder.svg?height=300&width=400",
       githubUrl: "https://github.com/example/task-manager",
       liveUrl: "https://task-manager-demo.com",
       category: "Backend",
       fullDescription: "Комплексная система управления задачами, разработанная для крупных команд.",
       features: ["Real-time уведомления", "Система ролей", "Аналитика"],
-      screenshots: ["/placeholder.png?height=400&width=600"],
+      screenshots: ["/placeholder.svg?height=400&width=600"],
     },
   ])
 
@@ -85,7 +85,7 @@ export function ProjectsManager() {
       title: formData.title,
       description: formData.description,
       technologies: formData.technologies.split(",").map((t) => t.trim()),
-      image: formData.image || "/placeholder.png?height=300&width=400",
+      image: formData.image || "/placeholder.svg?height=300&width=400",
       liveUrl: formData.liveUrl || undefined,
       githubUrl: formData.githubUrl || undefined,
       category: formData.category,
@@ -297,7 +297,7 @@ export function ProjectsManager() {
                       name="image"
                       value={formData.image}
                       onChange={handleInputChange}
-                      placeholder="/placeholder.png?height=300&width=400"
+                      placeholder="/placeholder.svg?height=300&width=400"
                       className="bg-gray-800/50 border-gray-700 text-white"
                     />
                   </div>
@@ -311,7 +311,7 @@ export function ProjectsManager() {
                       name="screenshots"
                       value={formData.screenshots}
                       onChange={handleInputChange}
-                      placeholder="/placeholder.png?height=400&width=600&#10;/placeholder.png?height=400&width=600"
+                      placeholder="/placeholder.svg?height=400&width=600&#10;/placeholder.svg?height=400&width=600"
                       className="bg-gray-800/50 border-gray-700 text-white"
                     />
                   </div>
@@ -340,7 +340,7 @@ export function ProjectsManager() {
               <Card key={project.id} className="bg-gray-800/50 border-gray-700 overflow-hidden group">
                 <div className="relative">
                   <img
-                    src={project.image || "/placeholder.png"}
+                    src={project.image || "/placeholder.svg"}
                     alt={project.title}
                     className="w-full h-32 object-cover"
                   />

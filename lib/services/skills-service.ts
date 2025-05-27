@@ -11,24 +11,32 @@ export interface SkillCategory {
   skills: string[]
 }
 
+const FALLBACK_KEY = "skillCategories"
+
 export class SkillsService {
   static async getAllSkillCategories(): Promise<SkillCategory[]> {
-    return api.get<SkillCategory[]>("/skills")
+    return api.get<SkillCategory[]>("/skills", FALLBACK_KEY)
   }
 
   static async getSkillCategoryById(id: string): Promise<SkillCategory> {
-    return api.get<SkillCategory>(`/skills/${id}`)
+    const categories = await this.getAllSkillCategories()
+    const category = categories.find((cat) => cat.id === id)
+    if (!category) {
+      throw new Error("Категория навыков не найдена")
+    }
+    return category
   }
 
   static async createSkillCategory(data: SkillCategory): Promise<SkillCategory> {
-    return api.post<SkillCategory>("/skills", data)
+    return api.post<SkillCategory>("/skills", data, FALLBACK_KEY)
   }
 
   static async updateSkillCategory(id: string, data: SkillCategory): Promise<SkillCategory> {
-    return api.put<SkillCategory>(`/skills/${id}`, data)
+    const updatedData = { ...data, id }
+    return api.put<SkillCategory>(`/skills/${id}`, updatedData, FALLBACK_KEY)
   }
 
   static async deleteSkillCategory(id: string): Promise<void> {
-    return api.delete<void>(`/skills/${id}`)
+    await api.delete<void>(`/skills/${id}`, id, FALLBACK_KEY)
   }
 }

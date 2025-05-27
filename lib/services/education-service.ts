@@ -17,25 +17,33 @@ export interface Education {
   status: "completed" | "in-progress" | "planned"
 }
 
+const FALLBACK_KEY = "educations"
+
 export class EducationService {
   static async getAllEducations(): Promise<Education[]> {
-    return api.get<Education[]>("/educations")
+    return api.get<Education[]>("/educations", FALLBACK_KEY)
   }
 
   static async getEducationById(id: string): Promise<Education> {
-    return api.get<Education>(`/educations/${id}`)
+    const educations = await this.getAllEducations()
+    const education = educations.find((edu) => edu.id === id)
+    if (!education) {
+      throw new Error("Образование не найдено")
+    }
+    return education
   }
 
   static async createEducation(data: Education): Promise<Education> {
-    return api.post<Education>("/educations", data)
+    return api.post<Education>("/educations", data, FALLBACK_KEY)
   }
 
   static async updateEducation(id: string, data: Education): Promise<Education> {
-    return api.put<Education>(`/educations/${id}`, data)
+    const updatedData = { ...data, id }
+    return api.put<Education>(`/educations/${id}`, updatedData, FALLBACK_KEY)
   }
 
   static async deleteEducation(id: string): Promise<void> {
-    return api.delete<void>(`/educations/${id}`)
+    await api.delete<void>(`/educations/${id}`, id, FALLBACK_KEY)
   }
 
   static async uploadDiploma(id: string, file: File): Promise<{ url: string }> {

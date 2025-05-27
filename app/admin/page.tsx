@@ -20,14 +20,14 @@ import { SkillsManager } from "@/components/skills-manager"
 import { EducationManager } from "@/components/education-manager"
 import { AchievementsManager } from "@/components/achievements-manager"
 import { Loader2, Save } from "lucide-react"
+import { AuthService } from "@/lib/auth-service"
+import { type PersonalInfo, PersonalInfoService } from "@/lib/services/personal-info-service"
 
 export default function AdminPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-
-  // Форма для персональной информации
-  const [personalInfo, setPersonalInfo] = useState({
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     name: "Горохов Владимир",
     title: "Backend разработчик",
     bio: "Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java Spring Boot. Стремлюсь применять свои навыки и знания в сфере автоматизации и разработки комплексных систем.",
@@ -38,11 +38,19 @@ export default function AdminPage() {
 
   // Проверка аутентификации
   useEffect(() => {
-    const checkAuth = () => {
-      const isAuthenticated = localStorage.getItem("isAuthenticated")
-      if (isAuthenticated !== "true") {
+    const checkAuth = async () => {
+      if (!AuthService.isAuthenticated()) {
         router.push("/login")
-      } else {
+        return
+      }
+
+      try {
+        // Загружаем персональную информацию
+        const data = await PersonalInfoService.getPersonalInfo()
+        setPersonalInfo(data)
+      } catch (error) {
+        console.error("Ошибка при загрузке персональной информации:", error)
+      } finally {
         setIsLoading(false)
       }
     }
@@ -62,23 +70,32 @@ export default function AdminPage() {
     e.preventDefault()
     setIsSaving(true)
 
-    // Сохраняем в localStorage
-    localStorage.setItem("personalInfo", JSON.stringify(personalInfo))
-
-    // Имитация сохранения данных
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    toast({
-      title: "Изменения сохранены",
-      description: "Персональная информация успешно обновлена",
-    })
-
-    setIsSaving(false)
+    try {
+      await PersonalInfoService.updatePersonalInfo(personalInfo)
+      toast({
+        title: "Изменения сохранены",
+        description: "Персональная информация успешно обновлена",
+      })
+    } catch (error) {
+      console.error("Ошибка при сохранении персональной информации:", error)
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить изменения. Пожалуйста, попробуйте еще раз.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated")
-    router.push("/login")
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout()
+      router.push("/login")
+    } catch (error) {
+      console.error("Ошибка при выходе из системы:", error)
+      router.push("/login")
+    }
   }
 
   if (isLoading) {
@@ -258,7 +275,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-4">
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-red-500/30">
                       <img
-                        src="/placeholder.png?height=96&width=96"
+                        src={personalInfo.profileImage || "/placeholder.svg?height=96&width=96"}
                         alt="Фото профиля"
                         className="object-cover w-full h-full"
                       />

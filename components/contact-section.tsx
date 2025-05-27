@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { motion, useInView } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,17 +12,41 @@ import { Textarea } from "@/components/ui/textarea"
 import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { MessagesService } from "@/lib/services/messages-service"
+import { PersonalInfoService, type PersonalInfo } from "@/lib/services/personal-info-service"
 
 export function ContactSection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   })
+
+  useEffect(() => {
+    const loadPersonalInfo = async () => {
+      try {
+        const data = await PersonalInfoService.getPersonalInfo()
+        setPersonalInfo(data)
+      } catch (error) {
+        console.error("Ошибка при загрузке персональной информации:", error)
+        // Fallback данные
+        setPersonalInfo({
+          name: "Горохов Владимир",
+          title: "Backend разработчик",
+          bio: "Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java Spring Boot.",
+          phone: "+7 (909) 540 41 41",
+          email: "vova-gorohov04@mail.ru",
+          location: "Томск, Россия",
+        })
+      }
+    }
+
+    loadPersonalInfo()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -77,6 +101,16 @@ export function ContactSection() {
         ease: [0.16, 1, 0.3, 1],
       },
     },
+  }
+
+  if (!personalInfo) {
+    return (
+      <section id="contact" className="py-24 relative" ref={ref}>
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -145,10 +179,10 @@ export function ContactSection() {
                   <div>
                     <h3 className="font-medium text-lg text-white">Телефон</h3>
                     <a
-                      href="tel:+79095404141"
+                      href={`tel:${personalInfo.phone.replace(/\s/g, "")}`}
                       className="text-gray-400 hover:text-red-400 transition-colors duration-300"
                     >
-                      +7 (909) 540 41 41
+                      {personalInfo.phone}
                     </a>
                   </div>
                 </CardContent>
@@ -172,10 +206,10 @@ export function ContactSection() {
                   <div>
                     <h3 className="font-medium text-lg text-white">Email</h3>
                     <a
-                      href="mailto:vova-gorohov04@mail.ru"
+                      href={`mailto:${personalInfo.email}`}
                       className="text-gray-400 hover:text-red-400 transition-colors duration-300"
                     >
-                      vova-gorohov04@mail.ru
+                      {personalInfo.email}
                     </a>
                   </div>
                 </CardContent>
@@ -198,7 +232,7 @@ export function ContactSection() {
                   </motion.div>
                   <div>
                     <h3 className="font-medium text-lg text-white">Город</h3>
-                    <p className="text-gray-400">Томск, Россия</p>
+                    <p className="text-gray-400">{personalInfo.location}</p>
                   </div>
                 </CardContent>
               </Card>

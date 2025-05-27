@@ -4,17 +4,44 @@ import { useRef, useEffect, useState } from "react"
 import Image from "next/image"
 import { motion, useMotionValue, useSpring } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Loader2 } from "lucide-react"
+import { PersonalInfoService, type PersonalInfo } from "@/lib/services/personal-info-service"
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
 
   const springX = useSpring(mouseX, { stiffness: 300, damping: 30 })
   const springY = useSpring(mouseY, { stiffness: 300, damping: 30 })
+
+  useEffect(() => {
+    const loadPersonalInfo = async () => {
+      try {
+        const data = await PersonalInfoService.getPersonalInfo()
+        setPersonalInfo(data)
+      } catch (error) {
+        console.error("Ошибка при загрузке персональной информации:", error)
+        // Fallback данные
+        setPersonalInfo({
+          name: "Горохов Владимир",
+          title: "Backend разработчик",
+          bio: "Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java Spring Boot.",
+          phone: "+7 (909) 540 41 41",
+          email: "vova-gorohov04@mail.ru",
+          location: "Томск, Россия",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadPersonalInfo()
+  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -38,6 +65,20 @@ export function HeroSection() {
     if (contactSection) {
       contactSection.scrollIntoView({ behavior: "smooth" })
     }
+  }
+
+  if (isLoading) {
+    return (
+      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+        <div className="flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+        </div>
+      </section>
+    )
+  }
+
+  if (!personalInfo) {
+    return null
   }
 
   return (
@@ -96,7 +137,7 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <h2 className="text-sm md:text-base uppercase tracking-[0.3em] text-red-500 mb-2 font-mono">
-                Backend разработчик
+                {personalInfo.title}
               </h2>
             </motion.div>
 
@@ -106,7 +147,7 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.4 }}
             >
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 text-center md:text-left bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
-                Горохов Владимир
+                {personalInfo.name}
               </h1>
             </motion.div>
 
@@ -115,11 +156,7 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              <p className="text-gray-400 mb-8 max-w-lg text-center md:text-left text-lg">
-                Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java
-                Spring Boot. Стремлюсь применять свои навыки и знания в сфере автоматизации и разработки комплексных
-                систем.
-              </p>
+              <p className="text-gray-400 mb-8 max-w-lg text-center md:text-left text-lg">{personalInfo.bio}</p>
             </motion.div>
 
             <motion.div
@@ -160,8 +197,8 @@ export function HeroSection() {
           >
             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-red-500/30 shadow-[0_0_30px_rgba(220,38,38,0.3)]">
               <Image
-                src="/images/photo.jpg"
-                alt="Владимир Горохов"
+                src={personalInfo.profileImage || "/placeholder.svg?height=320&width=320"}
+                alt={personalInfo.name}
                 fill
                 className="object-cover"
                 priority

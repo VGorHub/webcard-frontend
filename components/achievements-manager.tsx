@@ -343,7 +343,7 @@ export function AchievementsManager() {
                           {formData.photos.map((photo, index) => (
                             <div key={index} className="relative group">
                               <img
-                                src={photo || "/placeholder.png"}
+                                src={photo || "/placeholder.svg"}
                                 alt={`Фото ${index + 1}`}
                                 className="w-full h-24 object-cover rounded border border-gray-700"
                               />

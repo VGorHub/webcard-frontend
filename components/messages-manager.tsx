@@ -7,48 +7,64 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
-import { Mail, Trash2, Eye, Calendar, User } from "lucide-react"
-
-interface Message {
-  id: string
-  name: string
-  email: string
-  subject: string
-  message: string
-  timestamp: string
-  read: boolean
-}
+import { Mail, Trash2, Eye, Calendar, User, Loader2 } from "lucide-react"
+import { type Message, MessagesService } from "@/lib/services/messages-service"
 
 export function MessagesManager() {
   const [messages, setMessages] = useState<Message[]>([])
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Загружаем сообщения из localStorage
-    const savedMessages = localStorage.getItem("contactMessages")
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages))
-    }
+    loadMessages()
   }, [])
 
-  const handleViewMessage = (message: Message) => {
+  const loadMessages = async () => {
+    setIsLoading(true)
+    try {
+      const data = await MessagesService.getAllMessages()
+      setMessages(data)
+    } catch (error) {
+      console.error("Ошибка при загрузке сообщений:", error)
+      toast({
+        title: "Ошибка загрузки",
+        description: "Не удалось загрузить сообщения. Пожалуйста, попробуйте еще раз.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleViewMessage = async (message: Message) => {
     setSelectedMessage(message)
     setIsDialogOpen(true)
 
     // Отмечаем сообщение как прочитанное
     if (!message.read) {
-      const updatedMessages = messages.map((m) => (m.id === message.id ? { ...m, read: true } : m))
-      setMessages(updatedMessages)
-      localStorage.setItem("contactMessages", JSON.stringify(updatedMessages))
+      try {
+        const updatedMessage = await MessagesService.markAsRead(message.id as string)
+        setMessages((prev) => prev.map((m) => (m.id === message.id ? updatedMessage : m)))
+      } catch (error) {
+        console.error("Ошибка при отметке сообщения как прочитанного:", error)
+      }
     }
   }
 
-  const handleDeleteMessage = (id: string) => {
-    const updatedMessages = messages.filter((m) => m.id !== id)
-    setMessages(updatedMessages)
-    localStorage.setItem("contactMessages", JSON.stringify(updatedMessages))
-    toast({ title: "Сообщение удалено", description: "Сообщение успешно удалено" })
+  const handleDeleteMessage = async (id: string) => {
+    try {
+      await MessagesService.deleteMessage(id)
+      setMessages((prev) => prev.filter((m) => m.id !== id))
+      toast({ title: "Сообщение удалено", description: "Сообщение успешно удалено" })
+    } catch (error) {
+      console.error("Ошибка при удалении сообщения:", error)
+      toast({
+        title: "Ошибка удаления",
+        description: "Не удалось удалить сообщение. Пожалуйста, попробуйте еще раз.",
+        variant: "destructive",
+      })
+    }
   }
 
   const formatDate = (timestamp: string) => {
@@ -85,7 +101,11 @@ export function MessagesManager() {
           </div>
         </CardHeader>
         <CardContent>
-          {messages.length > 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            </div>
+          ) : messages.length > 0 ? (
             <div className="space-y-4">
               {messages.map((message) => (
                 <Card
@@ -124,7 +144,7 @@ export function MessagesManager() {
                           className="border-red-500/30 text-red-400 hover:bg-red-500/10"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleDeleteMessage(message.id)
+                            handleDeleteMessage(message.id as string)
                           }}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -203,7 +223,7 @@ export function MessagesManager() {
                   variant="outline"
                   className="border-red-500/30 text-red-400 hover:bg-red-500/10"
                   onClick={() => {
-                    handleDeleteMessage(selectedMessage.id)
+                    handleDeleteMessage(selectedMessage.id as string)
                     setIsDialogOpen(false)
                   }}
                 >

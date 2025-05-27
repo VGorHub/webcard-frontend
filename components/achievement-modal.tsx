@@ -118,7 +118,7 @@ export function AchievementModal({ achievement, isOpen, onClose }: AchievementMo
                       {achievement.photos.map((photo, index) => (
                         <div key={index} className="relative overflow-hidden rounded-lg border border-gray-800 group">
                           <img
-                            src={photo || "/placeholder.png"}
+                            src={photo || "/placeholder.svg"}
                             alt={`Фото ${index + 1}`}
                             className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
                           />
@@ -139,7 +139,7 @@ export function AchievementModal({ achievement, isOpen, onClose }: AchievementMo
                     <div className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                       <div className="relative w-24 h-32 overflow-hidden rounded border border-gray-600">
                         <img
-                          src={achievement.certificate || "/placeholder.png"}
+                          src={achievement.certificate || "/placeholder.svg"}
                           alt="Сертификат"
                           className="w-full h-full object-cover"
                         />

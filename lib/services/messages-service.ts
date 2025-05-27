@@ -14,24 +14,43 @@ export interface Message {
   read: boolean
 }
 
+const FALLBACK_KEY = "contactMessages"
+
 export class MessagesService {
   static async getAllMessages(): Promise<Message[]> {
-    return api.get<Message[]>("/messages")
+    return api.get<Message[]>("/messages", FALLBACK_KEY)
   }
 
   static async getMessageById(id: string): Promise<Message> {
-    return api.get<Message>(`/messages/${id}`)
+    const messages = await this.getAllMessages()
+    const message = messages.find((msg) => msg.id === id)
+    if (!message) {
+      throw new Error("Сообщение не найдено")
+    }
+    return message
   }
 
   static async createMessage(data: Omit<Message, "id" | "timestamp" | "read">): Promise<Message> {
-    return api.post<Message>("/messages", data)
+    const messageData = {
+      ...data,
+      timestamp: new Date().toISOString(),
+      read: false,
+    }
+    return api.post<Message>("/messages", messageData, FALLBACK_KEY)
   }
 
   static async markAsRead(id: string): Promise<Message> {
-    return api.patch<Message>(`/messages/${id}/read`, { read: true })
+    const messages = await this.getAllMessages()
+    const message = messages.find((msg) => msg.id === id)
+    if (!message) {
+      throw new Error("Сообщение не найдено")
+    }
+
+    const updatedMessage = { ...message, read: true }
+    return api.patch<Message>(`/messages/${id}/read`, updatedMessage, FALLBACK_KEY)
   }
 
   static async deleteMessage(id: string): Promise<void> {
-    return api.delete<void>(`/messages/${id}`)
+    await api.delete<void>(`/messages/${id}`, id, FALLBACK_KEY)
   }
 }

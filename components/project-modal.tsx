@@ -58,7 +58,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
 
               <div className="relative h-64 md:h-80 overflow-hidden rounded-t-lg">
                 <img
-                  src={project.image || "/placeholder.png"}
+                  src={project.image || "/placeholder.svg"}
                   alt={project.title}
                   className="w-full h-full object-cover"
                 />
@@ -104,7 +104,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                       {project.screenshots.map((screenshot, index) => (
                         <div key={index} className="relative overflow-hidden rounded-lg border border-gray-800">
                           <img
-                            src={screenshot || "/placeholder.png"}
+                            src={screenshot || "/placeholder.svg"}
                             alt={`Screenshot ${index + 1}`}
                             className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
                           />

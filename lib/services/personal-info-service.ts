@@ -15,13 +15,27 @@ export interface PersonalInfo {
   profileImage?: string
 }
 
+const FALLBACK_KEY = "personalInfo"
+
 export class PersonalInfoService {
   static async getPersonalInfo(): Promise<PersonalInfo> {
-    return api.get<PersonalInfo>("/personal-info")
+    try {
+      return await api.get<PersonalInfo>("/personal-info", FALLBACK_KEY)
+    } catch (error) {
+      // Возвращаем дефолтные данные если нет сохраненных
+      return {
+        name: "Горохов Владимир",
+        title: "Backend разработчик",
+        bio: "Амбициозный и целеустремлённый разработчик с опытом создания backend-приложений на Python/Django и Java Spring Boot.",
+        phone: "+7 (909) 540 41 41",
+        email: "vova-gorohov04@mail.ru",
+        location: "Томск, Россия",
+      }
+    }
   }
 
   static async updatePersonalInfo(data: PersonalInfo): Promise<PersonalInfo> {
-    return api.put<PersonalInfo>("/personal-info", data)
+    return api.put<PersonalInfo>("/personal-info", data, FALLBACK_KEY)
   }
 
   static async updateProfileImage(file: File): Promise<{ url: string }> {

@@ -18,25 +18,33 @@ export interface Project {
   screenshots: string[]
 }
 
+const FALLBACK_KEY = "projects"
+
 export class ProjectsService {
   static async getAllProjects(): Promise<Project[]> {
-    return api.get<Project[]>("/projects")
+    return api.get<Project[]>("/projects", FALLBACK_KEY)
   }
 
   static async getProjectById(id: string): Promise<Project> {
-    return api.get<Project>(`/projects/${id}`)
+    const projects = await this.getAllProjects()
+    const project = projects.find((proj) => proj.id === id)
+    if (!project) {
+      throw new Error("Проект не найден")
+    }
+    return project
   }
 
   static async createProject(data: Project): Promise<Project> {
-    return api.post<Project>("/projects", data)
+    return api.post<Project>("/projects", data, FALLBACK_KEY)
   }
 
   static async updateProject(id: string, data: Project): Promise<Project> {
-    return api.put<Project>(`/projects/${id}`, data)
+    const updatedData = { ...data, id }
+    return api.put<Project>(`/projects/${id}`, updatedData, FALLBACK_KEY)
   }
 
   static async deleteProject(id: string): Promise<void> {
-    return api.delete<void>(`/projects/${id}`)
+    await api.delete<void>(`/projects/${id}`, id, FALLBACK_KEY)
   }
 
   static async uploadProjectImage(id: string, file: File): Promise<{ url: string }> {

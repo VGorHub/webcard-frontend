@@ -43,7 +43,7 @@ export class FileUploadService {
     }
 
     // Иначе формируем URL на основе базового URL API
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api"
     return `${baseUrl}/files/${path}`
   }
 }
